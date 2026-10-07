@@ -1,0 +1,303 @@
+##[Ps1 To Exe]
+##
+##Kd3HDZOFADWE8uO1
+##Nc3NCtDXTlaDjofG5iZk2Ur9VWElUuGUrriry4C47NbLvijQR5MrblF5kzv9EE65ZtsfVPIQi4MXTUsiIqAN+uTYFrWvXfREm+BwCw==
+##Kd3HFJGZHWLWoLaVvnQnhQ==
+##LM/RF4eFHHGZ7/K1
+##K8rLFtDXTiW5
+##OsHQCZGeTiiZ4NI=
+##OcrLFtDXTiW5
+##LM/BD5WYTiiZ4tI=
+##McvWDJ+OTiiZ4tI=
+##OMvOC56PFnzN8u+Vs1Q=
+##M9jHFoeYB2Hc8u+Vs1Q=
+##PdrWFpmIG2HcofKIo2QX
+##OMfRFJyLFzWE8uK1
+##KsfMAp/KUzWI0g==
+##OsfOAYaPHGbQvbyVvnQmqxugEiZ7Dg==
+##LNzNAIWJGmPcoKHc7Do3uAu/DDhlPovL2Q==
+##LNzNAIWJGnvYv7eVvnRf/FvrUFsuYNae+ZGry4O982gIeWXhCbUYSFI3vijuEESzXpI=
+##M9zLA5mED3nfu77Q7TV64AuzAkAyfsCJirOp14TxzPP/tirXB58MTDQ=
+##NcDWAYKED3nfu77Q7TV64AuzAlsyfciUt/aDwZGw8PPhvivNCakBQEBy9g==
+##OMvRB4KDHmHQvbyVvnRS61/rUHg5Z9ae+YW+14yz8arIvjXVRoMZTFpj1m+8KUqzWPUXWPAboJElWhImTw==
+##P8HPFJGEFzWE8prM8zFl1k7gUW0MYsqZuLolIEPc
+##KNzDAJWHD2fS8u+Vyy1n4FndR2Y4a4W8tbmlxY0+GyiM
+##P8HSHYKDCX3N8u+VwDtn/FnnRWA/LmdS+eT3ltf81/P8vjfqTJQHTHN7mSv9CAX9eP4eFeccs9kFRl04KuEO8KTVH6nJ
+##LNzLEpGeC3fMu77Ro2k3hQ==
+##L97HB5mLAnfMu77Ro2k3hQ==
+##P8HPCZWEGmaZ7/Lw9TF58QvHZih8LoPb6Obn4Y+9/ebpv2uZeZUDTEZykmn+HQuSVfMUFd0UpsUeWxpqLP0F5LvXVYc=
+##L8/UAdDXTlaDjofG5iZk2Ur9VWElUuGUrriry4C47NbfojbURpRUbVFnmiblCU6zTbIhQPwBsZ8UTRhK
+##Kc/BRM3KXxU=
+##
+##
+##fd6a9f26a06ea3bc99616d4851b372ba
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+<#
+================================================================
+  HYPERSENSEGLOBAL™ X Olaf Hartong
+  Sysmon Deployment Suite  |  v1.0
+----------------------------------------------------------------
+  Author : AG HYDRAX FF (@HYDRAXFF)
+  Config : Olaf Hartong sysmon-modular (fallback: SwiftOnSecurity)
+  Purpose: Deploy, verify and manage Sysmon with enterprise rules
+  Event  : ID 7 (Image Load) + ID 10 (Process Access) ENABLED
+================================================================
+#>
+
+#Requires -RunAsAdministrator
+
+# ============================================================
+#  BRANDING & GLOBAL VARIABLES
+# ============================================================
+$Brand        = "HYPERSENSEGLOBAL™ AG HYDRAX FF (@HYDRAXFF)"
+$Partner      = "Olaf Hartong"
+$ToolName     = "Sysmon Deployment Suite"
+$Version      = "v1.0"
+$ConfigPath   = "$env:TEMP\sysmonconfig.xml"
+$SysmonUrl    = "https://download.sysinternals.com/files/Sysmon.zip"
+$ZipPath      = "$env:TEMP\Sysmon.zip"
+$ExtractPath  = "$env:TEMP\Sysmon"
+
+# Config sources (tried in order)
+$ConfigSources = @(
+    @{ Name = "Olaf Hartong (sysmon-modular)"; Url = "https://raw.githubusercontent.com/olafhartong/sysmon-modular/master/sysmonconfig.xml" },
+    @{ Name = "Olaf Hartong (sysmon subfolder)"; Url = "https://raw.githubusercontent.com/olafhartong/sysmon-modular/master/sysmon/sysmonconfig.xml" },
+    @{ Name = "SwiftOnSecurity (fallback)";      Url = "https://raw.githubusercontent.com/SwiftOnSecurity/sysmon-config/master/sysmonconfig-export.xml" }
+)
+
+# ============================================================
+#  UI HELPERS
+# ============================================================
+function Show-Banner {
+    Clear-Host
+    Write-Host ""
+    Write-Host "  ██╗  ██╗██╗   ██╗██████╗ ███████╗██████╗ ███████╗███████╗███╗   ██╗███████╗███████╗" -ForegroundColor Cyan
+    Write-Host "  ██║  ██║╚██╗ ██╔╝██╔══██╗██╔════╝██╔══██╗██╔════╝██╔════╝████╗  ██║██╔════╝██╔════╝" -ForegroundColor Cyan
+    Write-Host "  ███████║ ╚████╔╝ ██████╔╝█████╗  ██████╔╝███████╗█████╗  ██╔██╗ ██║███████╗█████╗  " -ForegroundColor Cyan
+    Write-Host "  ██╔══██║  ╚██╔╝  ██╔═══╝ ██╔══╝  ██╔══██╗╚════██║██╔══╝  ██║╚██╗██║██╔════╝██╔══╝  " -ForegroundColor Cyan
+    Write-Host "  ██║  ██║   ██║   ██║     ███████╗██║  ██║███████║███████╗██║ ╚████║███████╗███████╗" -ForegroundColor Cyan
+    Write-Host "  ╚═╝  ╚═╝   ╚═╝   ╚═╝     ╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═══╝╚══════╝╚══════╝" -ForegroundColor Cyan
+    Write-Host "                                       G L O B A L" -ForegroundColor DarkCyan
+    Write-Host ""
+    Write-Host "        ╔══════════════════════════════════════════════════════════════╗" -ForegroundColor Yellow
+    Write-Host "        ║   $Brand  ✕  $Partner" -ForegroundColor Yellow
+    Write-Host "        ║   $ToolName  |  $Version" -ForegroundColor Yellow
+    Write-Host "        ╚══════════════════════════════════════════════════════════════╝" -ForegroundColor Yellow
+    Write-Host ""
+}
+
+function Show-Menu {
+    Write-Host "  ┌─────────────────────────── MAIN MENU ───────────────────────────┐" -ForegroundColor White
+    Write-Host "  │                                                                 │" -ForegroundColor White
+    Write-Host "  │   [1]  ▶  RUN  -  Install / Update Sysmon                       │" -ForegroundColor Green
+    Write-Host "  │   [2]  ✔  STATUS  -  Check Sysmon service state                 │" -ForegroundColor Cyan
+    Write-Host "  │   [3]  ⚙  RECONFIGURE  -  Reload config on running Sysmon      │" -ForegroundColor Cyan
+    Write-Host "  │   [4]  🗑  UNINSTALL  -  Remove Sysmon                          │" -ForegroundColor Yellow
+    Write-Host "  │   [5]  📜  EVENTS  -  Show latest Sysmon events (7 & 10)        │" -ForegroundColor Cyan
+    Write-Host "  │   [6]  ℹ  ABOUT  -  About this tool                             │" -ForegroundColor DarkGray
+    Write-Host "  │   [0]  ✖  EXIT                                                 │" -ForegroundColor Red
+    Write-Host "  │                                                                 │" -ForegroundColor White
+    Write-Host "  └─────────────────────────────────────────────────────────────────┘" -ForegroundColor White
+    Write-Host ""
+}
+
+function Pause-Return {
+    Write-Host ""
+    Write-Host "  Press [ENTER] to return to the main menu..." -ForegroundColor DarkGray
+    [void][System.Console]::ReadLine()
+}
+
+# ============================================================
+#  CORE FUNCTIONS
+# ============================================================
+function Get-ConfigFile {
+    Write-Host "`n  [1/3] Downloading Sysmon configuration..." -ForegroundColor Cyan
+    foreach ($src in $ConfigSources) {
+        try {
+            Write-Host ("       → Trying: {0}" -f $src.Name) -ForegroundColor DarkGray
+            Invoke-WebRequest -Uri $src.Url -OutFile $ConfigPath -UseBasicParsing -ErrorAction Stop
+            if ((Test-Path $ConfigPath) -and (Get-Item $ConfigPath).Length -gt 0) {
+                Write-Host ("       ✔ Config OK ({0:N0} bytes) from {1}" -f (Get-Item $ConfigPath).Length, $src.Name) -ForegroundColor Green
+                return $true
+            }
+        } catch {
+            Write-Host "       ✘ Not available, trying next..." -ForegroundColor DarkYellow
+        }
+    }
+    Write-Host "  ✘ ERROR: All config sources failed." -ForegroundColor Red
+    return $false
+}
+
+function Invoke-SysmonRun {
+    Show-Banner
+    Write-Host "  ▶  RUN MODE — Installing / Updating Sysmon" -ForegroundColor Green
+    Write-Host "  ──────────────────────────────────────────────" -ForegroundColor DarkGray
+
+    # 1. Get config
+    if (-not (Get-ConfigFile)) { Pause-Return; return }
+
+    # 2. Uninstall old
+    Write-Host "`n  [2/3] Checking for existing Sysmon..." -ForegroundColor Cyan
+    if (Test-Path "C:\Windows\Sysmon64.exe") {
+        Write-Host "       → Uninstalling existing Sysmon..." -ForegroundColor Yellow
+        & "C:\Windows\Sysmon64.exe" -u | Out-Null
+        Start-Sleep -Seconds 2
+    } else {
+        Write-Host "       → No existing Sysmon found." -ForegroundColor DarkGray
+    }
+
+    # 3. Download & extract Sysmon
+    Write-Host "`n  [3/3] Deploying Sysmon v15.22..." -ForegroundColor Cyan
+    Write-Host "       → Downloading binaries..." -ForegroundColor DarkGray
+    Invoke-WebRequest -Uri $SysmonUrl -OutFile $ZipPath -UseBasicParsing
+    Write-Host "       → Extracting..." -ForegroundColor DarkGray
+    Expand-Archive -Path $ZipPath -DestinationPath $ExtractPath -Force
+    Write-Host "       → Installing with configuration..." -ForegroundColor DarkGray
+    & "$ExtractPath\Sysmon64.exe" -accepteula -i $ConfigPath
+
+    # 4. Verify
+    Start-Sleep -Seconds 3
+    $svc = Get-Service Sysmon64 -ErrorAction SilentlyContinue
+    if ($svc -and $svc.Status -eq "Running") {
+        Remove-Item $ZipPath, $ExtractPath -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Host ""
+        Write-Host "  ╔════════════════════════════════════════════════════╗" -ForegroundColor Green
+        Write-Host "  ║  ✔  SUCCESS — Sysmon installed & running           ║" -ForegroundColor Green
+        Write-Host "  ║  Config  : Olaf Hartong / SwiftOnSecurity          ║" -ForegroundColor Green
+        Write-Host "  ║  Event 7 : Image Load        → ENABLED             ║" -ForegroundColor Green
+        Write-Host "  ║  Event 10: Process Access    → ENABLED             ║" -ForegroundColor Green
+        Write-Host "  ╚════════════════════════════════════════════════════╝" -ForegroundColor Green
+    } else {
+        Write-Host ""
+        Write-Host "  ✘ FAILED: Sysmon service is NOT running." -ForegroundColor Red
+    }
+    Pause-Return
+}
+
+function Invoke-SysmonStatus {
+    Show-Banner
+    Write-Host "  ✔  STATUS — Sysmon Service State" -ForegroundColor Cyan
+    Write-Host "  ──────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host ""
+
+    $svc = Get-Service Sysmon64 -ErrorAction SilentlyContinue
+    if ($svc) {
+        Write-Host ("  Service Name   : {0}" -f $svc.Name)
+        Write-Host ("  Display Name   : {0}" -f $svc.DisplayName)
+        Write-Host ("  Status         : {0}" -f $svc.Status) -ForegroundColor Green
+        Write-Host ("  Start Type     : {0}" -f $svc.StartType)
+
+        $drv = Get-Service SysmonDrv -ErrorAction SilentlyContinue
+        if ($drv) {
+            Write-Host ("  Driver Status  : {0}" -f $drv.Status) -ForegroundColor Green
+        }
+        if (Test-Path "C:\Windows\Sysmon64.exe") {
+            $ver = (Get-Item "C:\Windows\Sysmon64.exe").VersionInfo.FileVersion
+            Write-Host ("  Binary Version : {0}" -f $ver)
+        }
+    } else {
+        Write-Host "  ✘ Sysmon is NOT installed." -ForegroundColor Red
+    }
+    Pause-Return
+}
+
+function Invoke-SysmonReconfigure {
+    Show-Banner
+    Write-Host "  ⚙  RECONFIGURE — Reload config on running Sysmon" -ForegroundColor Cyan
+    Write-Host "  ──────────────────────────────────────────────" -ForegroundColor DarkGray
+
+    $svc = Get-Service Sysmon64 -ErrorAction SilentlyContinue
+    if (-not $svc) {
+        Write-Host "  ✘ Sysmon not installed. Use [1] RUN first." -ForegroundColor Red
+        Pause-Return; return
+    }
+    if (-not (Get-ConfigFile)) { Pause-Return; return }
+
+    Write-Host "`n  → Applying config..." -ForegroundColor Cyan
+    & "C:\Windows\Sysmon64.exe" -c $ConfigPath
+    Write-Host "  ✔ Reconfiguration command completed." -ForegroundColor Green
+    Pause-Return
+}
+
+function Invoke-SysmonUninstall {
+    Show-Banner
+    Write-Host "  🗑  UNINSTALL — Remove Sysmon from this system" -ForegroundColor Yellow
+    Write-Host "  ──────────────────────────────────────────────" -ForegroundColor DarkGray
+
+    if (Test-Path "C:\Windows\Sysmon64.exe") {
+        Write-Host "  → Uninstalling Sysmon..." -ForegroundColor Yellow
+        & "C:\Windows\Sysmon64.exe" -u
+        Write-Host "  ✔ Sysmon uninstalled." -ForegroundColor Green
+    } else {
+        Write-Host "  ✘ Sysmon is not installed." -ForegroundColor DarkGray
+    }
+    Pause-Return
+}
+
+function Invoke-SysmonEvents {
+    Show-Banner
+    Write-Host "  📜  EVENTS — Latest Sysmon Events (7 & 10 focus)" -ForegroundColor Cyan
+    Write-Host "  ──────────────────────────────────────────────" -ForegroundColor DarkGray
+
+    try {
+        Write-Host "`n  Last 10 events from Sysmon log:`n" -ForegroundColor Cyan
+        Get-WinEvent -LogName "Microsoft-Windows-Sysmon/Operational" -MaxEvents 10 -ErrorAction Stop |
+            Select-Object TimeCreated, Id, LevelDisplayName |
+            Format-Table -AutoSize
+
+        Write-Host "  Event ID 7 & 10 counts (last 500 events):" -ForegroundColor Cyan
+        Get-WinEvent -LogName "Microsoft-Windows-Sysmon/Operational" -MaxEvents 500 -ErrorAction SilentlyContinue |
+            Where-Object { $_.Id -in 7,10 } |
+            Group-Object Id | Select-Object @{n='EventID';e={$_.Name}}, Count | Format-Table -AutoSize
+    } catch {
+        Write-Host "  ✘ Could not read Sysmon event log: $($_.Exception.Message)" -ForegroundColor Red
+    }
+    Pause-Return
+}
+
+function Invoke-About {
+    Show-Banner
+    Write-Host "  ℹ  ABOUT" -ForegroundColor Cyan
+    Write-Host "  ──────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  Tool     : $ToolName" 
+    Write-Host "  Version  : $Version"
+    Write-Host "  Brand    : $Brand"
+    Write-Host "  Partner  : $Partner (sysmon-modular)"
+    Write-Host "  Fallback : SwiftOnSecurity sysmon-config"
+    Write-Host ""
+    Write-Host "  Purpose  : Enterprise Sysmon deployment with detection rules" 
+    Write-Host "             covering process injection, LSASS access, DLL loads."
+    Write-Host ""
+    Write-Host "  Events   : ID 7  (Image Load)"
+    Write-Host "             ID 10 (Process Access)"
+    Write-Host ""
+    Pause-Return
+}
+
+# ============================================================
+#  MAIN LOOP
+# ============================================================
+while ($true) {
+    Show-Banner
+    Show-Menu
+    $choice = Read-Host "  HYPERSENSE> Select an option"
+
+    switch ($choice) {
+        "1" { Invoke-SysmonRun }
+        "2" { Invoke-SysmonStatus }
+        "3" { Invoke-SysmonReconfigure }
+        "4" { Invoke-SysmonUninstall }
+        "5" { Invoke-SysmonEvents }
+        "6" { Invoke-About }
+        "0" {
+            Write-Host "`n  Exiting $Brand $ToolName. Stay secure. 🛡️`n" -ForegroundColor Cyan
+            break
+        }
+        default {
+            Write-Host "`n  ✘ Invalid option. Try again." -ForegroundColor Red
+            Start-Sleep -Seconds 1
+        }
+    }
+    if ($choice -eq "0") { break }
+}
