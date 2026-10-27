@@ -1,26 +1,58 @@
- TOOL RELEASE: HYPERSENSEGLOBAL™ X OLAF HARTONG
+# Sysmon Deployment Suite
 
-We are  announce the release of our new Sysmon Deployment Suite v1.0!
+**Enterprise-grade endpoint logging in one menu.** Downloads, installs and configures Sysmon with the Olaf Hartong configuration, then tunes it for the two events that actually catch injection and credential theft.
 
-Tired of manually configuring Sysmon? We've built a fully interactive, menu-driven tool that deploys enterprise-grade endpoint monitoring in seconds.
+## Why Event ID 7 and 10
 
- What does it do?
-It automatically downloads, installs, and configures Sysmon using the world-renowned Olaf Hartong security configuration (with a fallback to SwiftOnSecurity). It is specifically tuned to enable Event ID 7 (Image Load) and Event ID 10 (Process Access)—the two most critical events for detecting process injection and credential dumping.
+| Event | What it reveals |
+| --- | --- |
+| **7 &mdash; Image Load** | A DLL loading from a temp path, an unsigned module, or a module with no metadata &mdash; the footprint of most injection |
+| **10 &mdash; Process Access** | One process opening another with `PROCESS_VM_READ` / `WRITE` &mdash; LSASS access, memory scraping, remote thread setup |
 
- Key Features:
- RUN: One-click install/update workflow.
- STATUS: Instantly check service and driver health.
- RECONFIGURE: Hot-reload new configs without reinstalling.
- UNINSTALL: Clean removal when you're done.
- EVENTS: View live Event ID 7 & 10 counts right in the terminal.
+Most default Sysmon configs leave these noisy or disabled. This suite enables them and filters the noise.
 
- How to get it:
-Grab the Sysmon Deployment Suite.exe  from our GitHub/Pinned message, save it, and run it in an Administrator PowerShell window. It features a sleek, branded HYPERSENSE interface that makes endpoint hardening effortless.
+## Menu
 
-Stay secure. 
-— HyperSenseGlobal™ Team
+| Option | Action |
+| --- | --- |
+| **RUN** | One-click install or update |
+| **STATUS** | Service and driver health, current config, event counts |
+| **RECONFIGURE** | Hot-reload a new config without reinstalling the driver |
+| **UNINSTALL** | Clean removal, including the driver service |
 
-<img width="992" height="519" alt="image" src="https://github.com/user-attachments/assets/b493b2f2-99dd-47e1-b079-2732900f7263" />
+## Install
 
+```powershell
+git clone https://github.com/hypersenseindia/Sysmon-Deployment-Suite
+cd Sysmon-Deployment-Suite
+# run the suite elevated
+.\Sysmon-Deployment-Suite.ps1
+```
 
-<img width="1872" height="739" alt="image" src="https://github.com/user-attachments/assets/3b46062d-b9f8-45c2-a645-ce94d963457e" />
+Requires an elevated PowerShell session and internet access on first run.
+
+## Config source
+
+1. [Olaf Hartong's sysmon-modular](https://github.com/olafhartong/sysmon-modular) &mdash; primary
+2. [SwiftOnSecurity's sysmon-config](https://github.com/SwiftOnSecurity/sysmon-config) &mdash; fallback if the first is unreachable
+
+The download is verified before it is applied.
+
+## Verify it is working
+
+```powershell
+Get-Service Sysmon64
+Get-WinEvent -LogName "Microsoft-Windows-Sysmon/Operational" -MaxEvents 5
+```
+
+## Notes
+
+- Windows 10 / 11, PowerShell 5.1+
+- Sysmon itself is a Microsoft Sysinternals tool, licensed separately
+- Configuration files are downloaded, not vendored &mdash; pin a commit hash if you need reproducibility
+---
+
+<p align="center">
+  <sub>Built by <b>AG HYDRAXFF</b> &mdash; HYPERSENSEGLOBAL &middot;
+  <a href="https://www.instagram.com/hydraxff_yt/">@hydraxff_yt</a></sub>
+</p>
